@@ -1,0 +1,16 @@
+.Contact {
+    margin: 20px auto;
+    width: 80%;
+    text-align: center;
+}
+
+.Input {
+    display: block;
+    margin: 20px auto;
+}
+
+@media (max-width: 600px) {
+    .Contact {
+        width: 500px;
+    }
+}
