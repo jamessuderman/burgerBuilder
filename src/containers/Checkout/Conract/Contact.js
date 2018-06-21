@@ -1,33 +1,136 @@
 import React, { Component } from 'react';
 import Button from '../../../components/UI/Button/Button';
+import axios from '../../../axios-orders';
+import Spinner from '../../../components/UI/Spinner/Spinner';
+import Input from '../../../components/UI/Input/Input';
 
 import Style from './Contact.css';
 
 class Contact extends Component {
   state = {
-    name: '',
-    email: '',
-    address: {
-      street: '',
-      city: '',
-      state: '',
-      postalCode: ''
+    orderForm: {
+      name: {
+        elementType: 'input',
+        elementConfig: {
+          type: 'text',
+          placeholder: 'Your Name'
+        },
+        value: ''
+      },
+      street: {
+        elementType: 'input',
+        elementConfig: {
+          type: 'text',
+          placeholder: 'Street Name'
+        },
+        value: ''
+      },
+      city: {
+        elementType: 'input',
+        elementConfig: {
+          type: 'text',
+          placeholder: 'City Name'
+        },
+        value: ''
+      },
+      state: {
+        elementType: 'input',
+        elementConfig: {
+          type: 'text',
+          placeholder: 'State'
+        },
+        value: ''
+      },
+      zipCode: {
+        elementType: 'input',
+        elementConfig: {
+          type: 'text',
+          placeholder: 'Zip Code'
+        },
+        value: ''
+      },
+      email: {
+        elementType: 'input',
+        elementConfig: {
+          type: 'email',
+          placeholder: 'Your Email'
+        },
+        value: ''
+      },
+      deliveryMethod: {
+        elementType: 'select',
+        elementConfig: {
+          options: [
+            {value: 'slowest', displayValue: 'Slowest'},
+            {value: 'normal', displayValue: 'Normalest'},
+            {value: 'fastest', displayValue: 'Fastest'}
+            ]
+        },
+        value: ''
+      },
+    },
+    loading: false
+  };
+
+  orderHandler = (event) => {
+    event.preventDefault();
+    this.setState({loading: true});
+    const formData = {};
+    for(let formElement in this.state.orderForm) {
+      formData[formElement] = this.state.orderForm[formElement].value
     }
+
+    const order = {
+      ingredients: this.props.ingredients,
+      price: this.props.price,
+      orderData: formData
+    };
+
+    axios.post('/orders.json', order)
+      .then(response => {
+        this.setState({loading: false});
+        this.props.history.push('/');
+        })
+      .catch(error => {
+        this.setState({loading: false});
+      });
+  };
+
+  inputChangedHandler = (event, inputIdentifier) => {
+    const updatedOrderForm = {...this.state.orderForm};
+    const updatedFormElement = {...updatedOrderForm[inputIdentifier]};
+    updatedFormElement.value = event.target.value;
+    updatedOrderForm[inputIdentifier] = updatedFormElement;
+    this.setState({orderForm: updatedOrderForm});
   };
 
   render() {
+    const formElements = [];
+    for(let key in this.state.orderForm) {
+      formElements.push({
+        id: key,
+        config: this.state.orderForm[key],
+      });
+    }
+
+    let form = (<form onSubmit={this.orderHandler}>
+                  {formElements.map(formElement => (
+                    <Input  key={formElement.id}
+                            elementType={formElement.config.elementType}
+                            elementConfig={formElement.config.elementConfig}
+                            value={formElement.config.value}
+                            changed={(event) => this.inputChangedHandler(event, formElement.id)}/>
+                  ))}
+                  <Button btnType="Success">ORDER</Button>
+                </form>);
+
+    if(this.state.loading) {
+      form = <Spinner/>;
+    }
     return(
       <div className={Style.Contact}>
         <h4>Enter your contact data</h4>
-        <form>
-          <input className={Style.Input} type="text" name="name" placeholder="Your Name"/>
-          <input className={Style.Input} type="email" name="email" placeholder="Your Email"/>
-          <input className={Style.Input} type="text" name="street" placeholder="Your Address"/>
-          <input className={Style.Input} type="text" name="city" placeholder="Your City"/>
-          <input className={Style.Input} type="text" name="state" placeholder="Your State"/>
-          <input className={Style.Input} type="text" name="zip" placeholder="Your Zip Code"/>
-          <Button btnType="Success">ORDER</Button>
-        </form>
+        {form}
       </div>
     )
   }
